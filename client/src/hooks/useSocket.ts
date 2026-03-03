@@ -14,7 +14,7 @@ export function useSocket() {
     let roomId = params.get('room')
 
     if (!roomId) {
-      roomId = Math.random().toString(36).substring(2, 8)
+      roomId = crypto.randomUUID().replace(/-/g, '').substring(0, 12)
       window.history.replaceState(null, '', `?room=${roomId}`)
     }
 
