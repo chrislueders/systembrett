@@ -1,0 +1,10 @@
+node_modules
+dist
+dist-ssr
+*.local
+*.log
+.DS_Store
+.env
+screenshot.png
+take-screenshot.js
+/package-lock.json
