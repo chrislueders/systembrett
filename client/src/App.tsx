@@ -5,6 +5,10 @@ import { Toolbar } from './components/Toolbar'
 import { CameraWidget } from './components/CameraWidget'
 import { useSocket } from './hooks/useSocket'
 import { useBoardStore } from './store/boardStore'
+
+export default function App() {
+  useSocket()
+
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === 'Backspace') {
@@ -20,13 +24,6 @@ import { useBoardStore } from './store/boardStore'
     window.addEventListener('keydown', handleKey)
     return () => window.removeEventListener('keydown', handleKey)
   }, [])
-import { Sidebar } from './components/Sidebar'
-import { Toolbar } from './components/Toolbar'
-import { CameraWidget } from './components/CameraWidget'
-import { useSocket } from './hooks/useSocket'
-
-export default function App() {
-  useSocket()
 
   return (
     <div className="w-screen h-screen bg-neutral-900 overflow-hidden relative">
