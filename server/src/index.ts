@@ -39,57 +39,57 @@ io.on('connection', (socket) => {
     console.log(`${socket.id} joined room ${roomId} (${peerCount} peers)`)
   })
 
-  socket.on('figure:add', (data) => {
-    const roomId = socket.data.roomId
+  socket.on('figure:add', (data: any) => {
+    const roomId = data.roomId || socket.data.roomId
     if (!roomId) return
     rooms.addFigure(roomId, data)
     socket.to(roomId).emit('figure:add', data)
   })
 
-  socket.on('figure:move', (data) => {
-    const roomId = socket.data.roomId
+  socket.on('figure:move', (data: any) => {
+    const roomId = data.roomId || socket.data.roomId
     if (!roomId) return
     rooms.moveFigure(roomId, data.id, data.position, data.boardHalf)
     socket.to(roomId).emit('figure:move', data)
   })
 
-  socket.on('figure:remove', (data) => {
-    const roomId = socket.data.roomId
+  socket.on('figure:remove', (data: any) => {
+    const roomId = data.roomId || socket.data.roomId
     if (!roomId) return
     rooms.removeFigure(roomId, data.id)
     socket.to(roomId).emit('figure:remove', data)
   })
 
-  socket.on('figure:rotate', (data) => {
-    const roomId = socket.data.roomId
+  socket.on('figure:rotate', (data: any) => {
+    const roomId = data.roomId || socket.data.roomId
     if (!roomId) return
     rooms.rotateFigure(roomId, data.id, data.rotation)
     socket.to(roomId).emit('figure:rotate', data)
   })
 
-  socket.on('figure:color', (data) => {
-    const roomId = socket.data.roomId
+  socket.on('figure:color', (data: any) => {
+    const roomId = data.roomId || socket.data.roomId
     if (!roomId) return
     rooms.colorFigure(roomId, data.id, data.color)
     socket.to(roomId).emit('figure:color', data)
   })
 
-  socket.on('board:split', (data) => {
-    const roomId = socket.data.roomId
+  socket.on('board:split', (data: any) => {
+    const roomId = data.roomId || socket.data.roomId
     if (!roomId) return
     rooms.setSplit(roomId, data.isSplit)
     socket.to(roomId).emit('board:split', data)
   })
 
-  socket.on('board:reset', () => {
-    const roomId = socket.data.roomId
+  socket.on('board:reset', (data: any) => {
+    const roomId = data?.roomId || socket.data.roomId
     if (!roomId) return
     rooms.reset(roomId)
     socket.to(roomId).emit('board:reset', {})
   })
 
-  socket.on('board:load', (data) => {
-    const roomId = socket.data.roomId
+  socket.on('board:load', (data: any) => {
+    const roomId = data.roomId || socket.data.roomId
     if (!roomId) return
     rooms.loadState(roomId, data)
     socket.to(roomId).emit('board:state', data)

@@ -83,7 +83,13 @@ export function useSocket() {
     })
 
     setOnSync((event: string, data: unknown) => {
-      socket.emit(event, data)
+      const state = useBoardStore.getState()
+      const roomId = state.roomId
+      const payload =
+        data && typeof data === 'object'
+          ? { ...(data as Record<string, unknown>), roomId }
+          : { roomId }
+      socket.emit(event, payload)
     })
 
     return () => {
