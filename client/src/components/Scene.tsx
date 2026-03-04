@@ -319,7 +319,8 @@ function SidebarDropHandler() {
 }
 
 function RightMouseRotateHandler() {
-  const { gl } = useThree()
+  const { gl, camera, scene } = useThree()
+  const rc = useRef(new THREE.Raycaster())
 
   useEffect(() => {
     const el = gl.domElement
@@ -335,8 +336,33 @@ function RightMouseRotateHandler() {
       if (e.button !== 2) return
       const state = useBoardStore.getState()
       if (!state.selectedFigureId) return
+
+      const rect = el.getBoundingClientRect()
+      const mouse = new THREE.Vector2(
+        ((e.clientX - rect.left) / rect.width) * 2 - 1,
+        -((e.clientY - rect.top) / rect.height) * 2 + 1
+      )
+      rc.current.setFromCamera(mouse, camera)
+      const hits = rc.current.intersectObjects(scene.children, true)
+
+      let hitFigureId: string | null = null
+      for (const h of hits) {
+        let obj: THREE.Object3D | null = h.object
+        while (obj) {
+          if (obj.userData?.isFigure && obj.userData.figureId) {
+            hitFigureId = obj.userData.figureId as string
+            break
+          }
+          obj = obj.parent
+        }
+        if (hitFigureId) break
+      }
+
+      if (!hitFigureId || hitFigureId !== state.selectedFigureId) return
+
       const fig = state.figures.find((f) => f.id === state.selectedFigureId)
       if (!fig) return
+
       rotating = true
       startY = e.clientY
       startRotation = fig.rotation
@@ -371,7 +397,7 @@ function RightMouseRotateHandler() {
       window.removeEventListener('pointermove', onPointerMove)
       window.removeEventListener('pointerup', onPointerUp)
     }
-  }, [gl])
+  }, [gl, camera, scene])
 
   return null
 }

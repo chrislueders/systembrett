@@ -128,7 +128,19 @@ export function RotationRing() {
       </mesh>
 
       <group rotation={[0, selectedFigure.rotation, 0]}>
-        <mesh position={[0, 0.01, ringRadius + 0.15]} rotation={[-Math.PI / 2, 0, 0]}>
+        <mesh
+          position={[0, 0.01, ringRadius + 0.15]}
+          rotation={[-Math.PI / 2, 0, 0]}
+          onPointerDown={handleRingPointerDown}
+          onClick={handleRingClick}
+          onPointerOver={(e) => {
+            e.stopPropagation()
+            document.body.style.cursor = 'crosshair'
+          }}
+          onPointerOut={() => {
+            if (!isRotating) document.body.style.cursor = 'default'
+          }}
+        >
           <coneGeometry args={[0.1, 0.2, 8]} />
           <meshStandardMaterial color="#ff6600" emissive="#ff3300" emissiveIntensity={0.5} />
         </mesh>

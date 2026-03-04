@@ -104,7 +104,7 @@ export function Figure({ data }: { data: FigureData }) {
       ref={groupRef}
       position={[data.position[0], BOARD_SURFACE_Y, data.position[2]]}
       rotation={[0, data.rotation, 0]}
-      userData={{ isFigure: true }}
+      userData={{ isFigure: true, figureId: data.id }}
       onClick={handleClick}
       onPointerDown={handlePointerDown}
       onPointerOver={(e) => {
