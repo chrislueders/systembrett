@@ -93,6 +93,7 @@ export function Figure({ data }: { data: FigureData }) {
 
   // Also stop propagation on pointerDown so the drag handler doesn't interfere
   const handlePointerDown = (e: ThreeEvent<PointerEvent>) => {
+    if (e.button !== 0) return
     e.stopPropagation()
   }
 

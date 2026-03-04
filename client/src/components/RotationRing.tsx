@@ -46,12 +46,14 @@ export function RotationRing() {
   }, [selectedFigure, isSplit])
 
   const handleRingPointerDown = (e: ThreeEvent<PointerEvent>) => {
+    if (e.button !== 0) return
     e.stopPropagation()
     setIsRotating(true)
     document.body.style.cursor = 'grabbing'
   }
 
   const handleRingClick = (e: ThreeEvent<MouseEvent>) => {
+    if (e.button !== 0) return
     e.stopPropagation()
   }
 

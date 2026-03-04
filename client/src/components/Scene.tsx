@@ -93,6 +93,8 @@ function FigureDragHandler() {
     const el = gl.domElement
 
     const onDown = (e: PointerEvent) => {
+      // Nur linke Maustaste darf Figuren ziehen
+      if (e.button !== 0) return
       const state = useBoardStore.getState()
       if (!state.selectedFigureId) return
 
@@ -164,6 +166,8 @@ function FigureDragHandler() {
 
 function BoardClickHandler() {
   const handleClick = useCallback((e: ThreeEvent<MouseEvent>) => {
+    // Nur linke Maustaste fuer Platzieren / Selektieren
+    if (e.button !== 0) return
     const state = useBoardStore.getState()
     const point = e.point
 

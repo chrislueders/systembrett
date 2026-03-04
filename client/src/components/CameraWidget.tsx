@@ -126,10 +126,16 @@ export function CameraWidget() {
     }
 
     window.addEventListener('mousedown', handleDown)
+    // Kontextmenue global unterdruecken, solange rechte Maustaste fuer Panning dient
+    const handleContext = (e: MouseEvent) => {
+      if (isRightDragging.current) e.preventDefault()
+    }
+    window.addEventListener('contextmenu', handleContext)
     window.addEventListener('mousemove', handleMove)
     window.addEventListener('mouseup', handleUp)
     return () => {
       window.removeEventListener('mousedown', handleDown)
+      window.removeEventListener('contextmenu', handleContext)
       window.removeEventListener('mousemove', handleMove)
       window.removeEventListener('mouseup', handleUp)
     }
