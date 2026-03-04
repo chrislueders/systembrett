@@ -8,6 +8,7 @@ import { RotationRing } from './RotationRing'
 import { useBoardStore } from '../store/boardStore'
 import { generateId } from '../store/boardStore'
 import { BOARD_SURFACE_Y, SPLIT_OFFSET, GAP_CLOSED } from '../types'
+import type { FigureType } from '../types'
 
 const _lookTarget = new THREE.Vector3()
 
@@ -250,7 +251,6 @@ function ZoomHandler() {
 
   return null
 }
-
 export function Scene() {
   return (
     <Canvas
@@ -261,12 +261,17 @@ export function Scene() {
       <CameraController />
       <ZoomHandler />
       <FigureDragHandler />
+      <RightMouseRotateHandler />
       <Lights />
       <Ground />
       <Board />
       <Figures />
       <RotationRing />
       <BoardClickHandler />
+      <SidebarDropHandler />
+    </Canvas>
+  )
+}
     </Canvas>
   )
 }
