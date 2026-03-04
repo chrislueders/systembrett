@@ -177,8 +177,9 @@ function BoardClickHandler() {
     }
 
     if (state.placingFigure) {
+      const id = generateId()
       state.addFigure({
-        id: generateId(),
+        id,
         type: state.placingFigure,
         color: 'wood',
         position: [localX, BOARD_SURFACE_Y, point.z],
@@ -186,6 +187,7 @@ function BoardClickHandler() {
         boardHalf,
       })
       state.setPlacingFigure(null)
+      state.selectFigure(id)
       return
     }
 
@@ -297,14 +299,16 @@ function SidebarDropHandler() {
         localX += boardHalf === 'left' ? GAP_CLOSED / 2 : -GAP_CLOSED / 2
       }
 
+      const id = generateId()
       state.addFigure({
-        id: generateId(),
+        id,
         type,
         color: 'wood',
         position: [localX, BOARD_SURFACE_Y, pos.z],
         rotation: 0,
         boardHalf,
       })
+      state.selectFigure(id)
     }
 
     el.addEventListener('dragover', onDragOver)
