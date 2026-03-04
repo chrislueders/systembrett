@@ -322,90 +322,6 @@ function SidebarDropHandler() {
   return null
 }
 
-function RightMouseRotateHandler() {
-  const { gl, camera, scene } = useThree()
-  const rc = useRef(new THREE.Raycaster())
-
-  useEffect(() => {
-    const el = gl.domElement
-    let rotating = false
-    let startY = 0
-    let startRotation = 0
-
-    const onContextMenu = (e: MouseEvent) => {
-      e.preventDefault()
-    }
-
-    const onPointerDown = (e: PointerEvent) => {
-      if (e.button !== 2) return
-      const state = useBoardStore.getState()
-      if (!state.selectedFigureId) return
-
-      const rect = el.getBoundingClientRect()
-      const mouse = new THREE.Vector2(
-        ((e.clientX - rect.left) / rect.width) * 2 - 1,
-        -((e.clientY - rect.top) / rect.height) * 2 + 1
-      )
-      rc.current.setFromCamera(mouse, camera)
-      const hits = rc.current.intersectObjects(scene.children, true)
-
-      let hitFigureId: string | null = null
-      for (const h of hits) {
-        let obj: THREE.Object3D | null = h.object
-        while (obj) {
-          if (obj.userData?.isFigure && obj.userData.figureId) {
-            hitFigureId = obj.userData.figureId as string
-            break
-          }
-          obj = obj.parent
-        }
-        if (hitFigureId) break
-      }
-
-      if (!hitFigureId || hitFigureId !== state.selectedFigureId) return
-
-      const fig = state.figures.find((f) => f.id === state.selectedFigureId)
-      if (!fig) return
-
-      rotating = true
-      startY = e.clientY
-      startRotation = fig.rotation
-      document.body.style.cursor = 'crosshair'
-    }
-
-    const onPointerMove = (e: PointerEvent) => {
-      if (!rotating) return
-      const dy = e.clientY - startY
-      const factor = -0.01
-      const newRot = startRotation + dy * factor
-      const { selectedFigureId } = useBoardStore.getState()
-      if (!selectedFigureId) return
-      useBoardStore.getState().rotateFigure(selectedFigureId, newRot)
-    }
-
-    const onPointerUp = () => {
-      if (rotating) {
-        rotating = false
-        document.body.style.cursor = 'default'
-      }
-    }
-
-    el.addEventListener('contextmenu', onContextMenu)
-    el.addEventListener('pointerdown', onPointerDown)
-    window.addEventListener('pointermove', onPointerMove)
-    window.addEventListener('pointerup', onPointerUp)
-
-    return () => {
-      el.removeEventListener('contextmenu', onContextMenu)
-      el.removeEventListener('pointerdown', onPointerDown)
-      window.removeEventListener('pointermove', onPointerMove)
-      window.removeEventListener('pointerup', onPointerUp)
-    }
-  }, [gl, camera, scene])
-
-  return null
-}
-
 export function Scene() {
   return (
     <Canvas
@@ -416,7 +332,6 @@ export function Scene() {
       <CameraController />
       <ZoomHandler />
       <FigureDragHandler />
-      <RightMouseRotateHandler />
       <Lights />
       <Ground />
       <Board />

@@ -22,6 +22,7 @@ export function CameraWidget() {
   const [localPanZ, setLocalPanZ] = useState(cameraPanZ)
   const [mode, setMode] = useState<Mode>('rotate')
   const isMiddleDragging = useRef(false)
+  const isRightDragging = useRef(false)
 
   useEffect(() => {
     setLocalAngle(cameraAngle)
@@ -67,6 +68,7 @@ export function CameraWidget() {
     const handleMouseUp = () => {
       isDragging.current = false
       isMiddleDragging.current = false
+      isRightDragging.current = false
     }
 
     window.addEventListener('mousemove', handleMouseMove)
@@ -77,30 +79,50 @@ export function CameraWidget() {
     }
   }, [localAngle, localPitch, localPanX, localPanZ, mode, setCameraAngle, setCameraPitch, setCameraPan])
 
-  // Middle mouse anywhere on window controls rotation (same Verhalten wie Kreis)
+  // Middle mouse = Drehen, rechte Maustaste = Bewegen (Pan) – ueberall im Fenster
   useEffect(() => {
     const handleDown = (e: MouseEvent) => {
-      if (e.button !== 1) return
-      isMiddleDragging.current = true
-      lastPos.current = { x: e.clientX, y: e.clientY }
-      e.preventDefault()
+      if (e.button === 1) {
+        // mittlere Maustaste (Scrollrad)
+        isMiddleDragging.current = true
+        isRightDragging.current = false
+        lastPos.current = { x: e.clientX, y: e.clientY }
+        e.preventDefault()
+      } else if (e.button === 2) {
+        // rechte Maustaste
+        isRightDragging.current = true
+        isMiddleDragging.current = false
+        lastPos.current = { x: e.clientX, y: e.clientY }
+        e.preventDefault()
+      }
     }
 
     const handleMove = (e: MouseEvent) => {
-      if (!isMiddleDragging.current) return
       const dx = e.clientX - lastPos.current.x
       const dy = e.clientY - lastPos.current.y
       lastPos.current = { x: e.clientX, y: e.clientY }
 
-      // Immer Rotationsmodus fuer mittlere Maustaste
-      const newAngle = useBoardStore.getState().cameraAngle + dx * 0.8
-      const newPitch = useBoardStore.getState().cameraPitch + dy * 0.5
-      setCameraAngle(newAngle)
-      setCameraPitch(newPitch)
+      if (isMiddleDragging.current) {
+        // Drehen
+        const state = useBoardStore.getState()
+        const newAngle = state.cameraAngle + dx * 0.8
+        const newPitch = state.cameraPitch + dy * 0.5
+        setCameraAngle(newAngle)
+        setCameraPitch(newPitch)
+      } else if (isRightDragging.current) {
+        // Bewegen (Pan) – gleiches Verhalten wie Widget im Modus \"Bewegen\"
+        const state = useBoardStore.getState()
+        const angleRad = (state.cameraAngle * Math.PI) / 180
+        const speed = 0.05
+        const moveX = state.cameraPanX + (-dx * Math.cos(angleRad) - dy * Math.sin(angleRad)) * speed
+        const moveZ = state.cameraPanZ + (dx * Math.sin(angleRad) - dy * Math.cos(angleRad)) * speed
+        setCameraPan(moveX, moveZ)
+      }
     }
 
     const handleUp = () => {
       isMiddleDragging.current = false
+      isRightDragging.current = false
     }
 
     window.addEventListener('mousedown', handleDown)
