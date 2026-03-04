@@ -21,6 +21,7 @@ export function CameraWidget() {
   const [localPanX, setLocalPanX] = useState(cameraPanX)
   const [localPanZ, setLocalPanZ] = useState(cameraPanZ)
   const [mode, setMode] = useState<Mode>('rotate')
+  const isMiddleDragging = useRef(false)
 
   useEffect(() => {
     setLocalAngle(cameraAngle)
@@ -65,6 +66,7 @@ export function CameraWidget() {
 
     const handleMouseUp = () => {
       isDragging.current = false
+      isMiddleDragging.current = false
     }
 
     window.addEventListener('mousemove', handleMouseMove)
@@ -74,6 +76,42 @@ export function CameraWidget() {
       window.removeEventListener('mouseup', handleMouseUp)
     }
   }, [localAngle, localPitch, localPanX, localPanZ, mode, setCameraAngle, setCameraPitch, setCameraPan])
+
+  // Middle mouse anywhere on window controls rotation (same Verhalten wie Kreis)
+  useEffect(() => {
+    const handleDown = (e: MouseEvent) => {
+      if (e.button !== 1) return
+      isMiddleDragging.current = true
+      lastPos.current = { x: e.clientX, y: e.clientY }
+      e.preventDefault()
+    }
+
+    const handleMove = (e: MouseEvent) => {
+      if (!isMiddleDragging.current) return
+      const dx = e.clientX - lastPos.current.x
+      const dy = e.clientY - lastPos.current.y
+      lastPos.current = { x: e.clientX, y: e.clientY }
+
+      // Immer Rotationsmodus fuer mittlere Maustaste
+      const newAngle = useBoardStore.getState().cameraAngle + dx * 0.8
+      const newPitch = useBoardStore.getState().cameraPitch + dy * 0.5
+      setCameraAngle(newAngle)
+      setCameraPitch(newPitch)
+    }
+
+    const handleUp = () => {
+      isMiddleDragging.current = false
+    }
+
+    window.addEventListener('mousedown', handleDown)
+    window.addEventListener('mousemove', handleMove)
+    window.addEventListener('mouseup', handleUp)
+    return () => {
+      window.removeEventListener('mousedown', handleDown)
+      window.removeEventListener('mousemove', handleMove)
+      window.removeEventListener('mouseup', handleUp)
+    }
+  }, [setCameraAngle, setCameraPitch])
 
   const presets = [
     { label: 'Oben', angle: 0, pitch: 88, panX: 0, panZ: 0 },
