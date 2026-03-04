@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { useBoardStore } from '../store/boardStore'
 import { FIGURE_CATALOG, ALL_COLORS } from '../types'
 import type { FigureType, FigureColor } from '../types'
@@ -25,9 +25,20 @@ function FigureButton({ type, label }: { type: FigureType; label: string }) {
   const setPlacingFigure = useBoardStore((s) => s.setPlacingFigure)
   const isActive = placingFigure === type
 
+  const handleClick = () => {
+    setPlacingFigure(isActive ? null : type)
+  }
+
+  const handleDragStart = (e: React.DragEvent<HTMLButtonElement>) => {
+    e.dataTransfer.effectAllowed = 'copy'
+    e.dataTransfer.setData('application/x-systembrett-figure-type', type)
+  }
+
   return (
     <button
-      onClick={() => setPlacingFigure(isActive ? null : type)}
+      onClick={handleClick}
+      draggable
+      onDragStart={handleDragStart}
       style={{
         display: 'flex',
         alignItems: 'center',

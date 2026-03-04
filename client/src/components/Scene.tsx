@@ -1,4 +1,4 @@
-import { useRef, useCallback, useEffect } from 'react'
+import React, { useRef, useCallback, useEffect } from 'react'
 import { Canvas, useThree, useFrame } from '@react-three/fiber'
 import type { ThreeEvent } from '@react-three/fiber'
 import * as THREE from 'three'
