@@ -251,6 +251,131 @@ function ZoomHandler() {
 
   return null
 }
+
+function SidebarDropHandler() {
+  const { camera, gl } = useThree()
+  const rc = useRef(new THREE.Raycaster())
+
+  const getWorldPos = useCallback(
+    (clientX: number, clientY: number): THREE.Vector3 | null => {
+      const rect = gl.domElement.getBoundingClientRect()
+      const mouse = new THREE.Vector2(
+        ((clientX - rect.left) / rect.width) * 2 - 1,
+        -((clientY - rect.top) / rect.height) * 2 + 1
+      )
+      rc.current.setFromCamera(mouse, camera)
+      return rc.current.ray.intersectPlane(_plane, _hit) ? _hit.clone() : null
+    },
+    [camera, gl]
+  )
+
+  useEffect(() => {
+    const el = gl.domElement
+
+    const onDragOver = (e: DragEvent) => {
+      if (e.dataTransfer?.types.includes('application/x-systembrett-figure-type')) {
+        e.preventDefault()
+        e.dataTransfer.dropEffect = 'copy'
+      }
+    }
+
+    const onDrop = (e: DragEvent) => {
+      const type = e.dataTransfer?.getData('application/x-systembrett-figure-type') as FigureType | ''
+      if (!type) return
+      e.preventDefault()
+
+      const pos = getWorldPos(e.clientX, e.clientY)
+      if (!pos) return
+
+      const state = useBoardStore.getState()
+      const isSplit = state.isSplit
+      const boardHalf: 'left' | 'right' = pos.x < 0 ? 'left' : 'right'
+      let localX = pos.x
+      if (isSplit) {
+        localX += boardHalf === 'left' ? SPLIT_OFFSET : -SPLIT_OFFSET
+      } else {
+        localX += boardHalf === 'left' ? GAP_CLOSED / 2 : -GAP_CLOSED / 2
+      }
+
+      state.addFigure({
+        id: generateId(),
+        type,
+        color: 'wood',
+        position: [localX, BOARD_SURFACE_Y, pos.z],
+        rotation: 0,
+        boardHalf,
+      })
+    }
+
+    el.addEventListener('dragover', onDragOver)
+    el.addEventListener('drop', onDrop)
+    return () => {
+      el.removeEventListener('dragover', onDragOver)
+      el.removeEventListener('drop', onDrop)
+    }
+  }, [gl, getWorldPos])
+
+  return null
+}
+
+function RightMouseRotateHandler() {
+  const { gl } = useThree()
+
+  useEffect(() => {
+    const el = gl.domElement
+    let rotating = false
+    let startY = 0
+    let startRotation = 0
+
+    const onContextMenu = (e: MouseEvent) => {
+      e.preventDefault()
+    }
+
+    const onPointerDown = (e: PointerEvent) => {
+      if (e.button !== 2) return
+      const state = useBoardStore.getState()
+      if (!state.selectedFigureId) return
+      const fig = state.figures.find((f) => f.id === state.selectedFigureId)
+      if (!fig) return
+      rotating = true
+      startY = e.clientY
+      startRotation = fig.rotation
+      document.body.style.cursor = 'crosshair'
+    }
+
+    const onPointerMove = (e: PointerEvent) => {
+      if (!rotating) return
+      const dy = e.clientY - startY
+      const factor = -0.01
+      const newRot = startRotation + dy * factor
+      const { selectedFigureId } = useBoardStore.getState()
+      if (!selectedFigureId) return
+      useBoardStore.getState().rotateFigure(selectedFigureId, newRot)
+    }
+
+    const onPointerUp = () => {
+      if (rotating) {
+        rotating = false
+        document.body.style.cursor = 'default'
+      }
+    }
+
+    el.addEventListener('contextmenu', onContextMenu)
+    el.addEventListener('pointerdown', onPointerDown)
+    window.addEventListener('pointermove', onPointerMove)
+    window.addEventListener('pointerup', onPointerUp)
+
+    return () => {
+      el.removeEventListener('contextmenu', onContextMenu)
+      el.removeEventListener('pointerdown', onPointerDown)
+      window.removeEventListener('pointermove', onPointerMove)
+      window.removeEventListener('pointerup', onPointerUp)
+    }
+  }, [gl])
+
+  return null
+}
+
 export function Scene() {
   return (
     <Canvas
@@ -269,9 +394,6 @@ export function Scene() {
       <RotationRing />
       <BoardClickHandler />
       <SidebarDropHandler />
-    </Canvas>
-  )
-}
     </Canvas>
   )
 }
