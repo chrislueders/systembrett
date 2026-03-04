@@ -48,7 +48,7 @@ export function RotationRing() {
   const handleRingPointerDown = (e: ThreeEvent<PointerEvent>) => {
     e.stopPropagation()
     setIsRotating(true)
-    document.body.style.cursor = 'crosshair'
+    document.body.style.cursor = 'grabbing'
   }
 
   const handleRingClick = (e: ThreeEvent<MouseEvent>) => {
@@ -112,7 +112,7 @@ export function RotationRing() {
         onClick={handleRingClick}
         onPointerOver={(e) => {
           e.stopPropagation()
-          document.body.style.cursor = 'crosshair'
+          document.body.style.cursor = 'grab'
         }}
         onPointerOut={() => {
           if (!isRotating) document.body.style.cursor = 'default'
@@ -135,7 +135,7 @@ export function RotationRing() {
           onClick={handleRingClick}
           onPointerOver={(e) => {
             e.stopPropagation()
-            document.body.style.cursor = 'crosshair'
+            document.body.style.cursor = 'grab'
           }}
           onPointerOut={() => {
             if (!isRotating) document.body.style.cursor = 'default'
