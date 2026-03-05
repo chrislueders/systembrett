@@ -35,13 +35,19 @@ export function CameraWidget() {
   }, [cameraPanX, cameraPanZ])
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    // Nur linke Maustaste aktiviert das Widget
+    if (e.button !== 0) return
     isDragging.current = true
     lastPos.current = { x: e.clientX, y: e.clientY }
     e.preventDefault()
   }, [])
 
   const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging.current) return
+    // Sicherheitscheck: nur reagieren, wenn wirklich die linke Taste gehalten wird
+    if (!isDragging.current || (e.buttons & 1) === 0) {
+      isDragging.current = false
+      return
+    }
     const dx = e.clientX - lastPos.current.x
     const dy = e.clientY - lastPos.current.y
     lastPos.current = { x: e.clientX, y: e.clientY }
@@ -176,9 +182,13 @@ export function CameraWidget() {
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
-        className="w-20 h-20 rounded-full bg-white/10 backdrop-blur-md border border-white/20
-                   cursor-grab active:cursor-grabbing flex items-center justify-center
-                   hover:bg-white/15 transition-colors select-none"
+        className="w-20 h-20 rounded-full cursor-grab active:cursor-grabbing flex items-center justify-center select-none"
+        style={{
+          background: 'rgba(0,0,0,0.45)',
+          backdropFilter: 'blur(24px)',
+          WebkitBackdropFilter: 'blur(24px)',
+          border: '1px solid rgba(255,255,255,0.15)',
+        }}
       >
         <div className="text-white/60 text-xs text-center pointer-events-none leading-tight">
           {mode === 'rotate' ? (
