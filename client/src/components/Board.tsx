@@ -2,7 +2,7 @@ import { useRef, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { useBoardStore } from '../store/boardStore'
-import { BOARD_SIZE, BOARD_HEIGHT, SPLIT_OFFSET, GAP_CLOSED, INSET_MARGIN } from '../types'
+import { BOARD_SIZE, BOARD_HEIGHT, BOARD_SURFACE_Y, SPLIT_OFFSET, GAP_CLOSED, INSET_MARGIN } from '../types'
 
 const INSET_COLOR = '#96731e'
 const STRIP_HEIGHT = 0.015
@@ -65,7 +65,8 @@ function createHalfShape(side: 'left' | 'right'): THREE.Shape {
 function InsetBorder({ side }: { side: 'left' | 'right' }) {
   const h = BOARD_SIZE / 2
   const m = INSET_MARGIN
-  const y = BOARD_HEIGHT + 0.04 + STRIP_HEIGHT / 2
+  // leicht in die Brettoberflaeche eingeschnitten (Kerbe)
+  const y = BOARD_SURFACE_Y - STRIP_HEIGHT / 2 - 0.002
   const cornerAdjust = 0.04
 
   const mat = useMemo(
