@@ -66,6 +66,7 @@ function InsetBorder({ side }: { side: 'left' | 'right' }) {
   const h = BOARD_SIZE / 2
   const m = INSET_MARGIN
   const y = BOARD_HEIGHT + 0.04 + STRIP_HEIGHT / 2
+  const cornerAdjust = 0.04
 
   const mat = useMemo(
     () => <meshStandardMaterial color={INSET_COLOR} roughness={0.75} />,
@@ -75,8 +76,8 @@ function InsetBorder({ side }: { side: 'left' | 'right' }) {
   if (side === 'left') {
     const leftX = -h + m
     const innerW = h - m
-    const verticalLen = (h - m) * 2 - STRIP_WIDTH
-    const horizontalLen = innerW - STRIP_WIDTH
+    const verticalLen = (h - m) * 2 - cornerAdjust * 2
+    const horizontalLen = innerW + cornerAdjust * 2
     return (
       <group>
         {/* Left vertical edge */}
@@ -99,8 +100,8 @@ function InsetBorder({ side }: { side: 'left' | 'right' }) {
   } else {
     const rightX = h - m
     const innerW = h - m
-    const verticalLen = (h - m) * 2 - STRIP_WIDTH
-    const horizontalLen = innerW - STRIP_WIDTH
+    const verticalLen = (h - m) * 2 - cornerAdjust * 2
+    const horizontalLen = innerW + cornerAdjust * 2
     return (
       <group>
         {/* Right vertical edge */}
