@@ -34,23 +34,21 @@ export function CameraWidget() {
     setLocalPanZ(cameraPanZ)
   }, [cameraPanX, cameraPanZ])
 
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    // Nur linke Maustaste aktiviert das Widget
-    if (e.button !== 0) return
-    isDragging.current = true
-    lastPos.current = { x: e.clientX, y: e.clientY }
-    e.preventDefault()
-  }, [])
+  const handlePointerDown = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      // Nur linke Maustaste aktiviert das Widget
+      if (e.button !== 0) return
+      isDragging.current = true
+      lastPos.current = { x: e.clientX, y: e.clientY }
+      e.currentTarget.setPointerCapture(e.pointerId)
+      e.preventDefault()
+    },
+    []
+  )
 
-  // Drag-Logik fuer das Widget selbst – laeuft ueber globale Listener,
-  // damit der Drag weitergeht, auch wenn der Mauszeiger den Kreis verlaesst.
-  useEffect(() => {
-    const handleMove = (e: MouseEvent) => {
-      if (!isDragging.current || (e.buttons & 1) === 0) {
-        isDragging.current = false
-        return
-      }
-
+  const handlePointerMove = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      if (!isDragging.current) return
       const dx = e.clientX - lastPos.current.x
       const dy = e.clientY - lastPos.current.y
       lastPos.current = { x: e.clientX, y: e.clientY }
@@ -71,19 +69,15 @@ export function CameraWidget() {
         setLocalPanZ(moveZ)
         setCameraPan(moveX, moveZ)
       }
-    }
+    },
+    [mode, localAngle, localPitch, localPanX, localPanZ, setCameraAngle, setCameraPitch, setCameraPan]
+  )
 
-    const handleUp = () => {
-      isDragging.current = false
-    }
-
-    window.addEventListener('mousemove', handleMove)
-    window.addEventListener('mouseup', handleUp)
-    return () => {
-      window.removeEventListener('mousemove', handleMove)
-      window.removeEventListener('mouseup', handleUp)
-    }
-  }, [mode, localAngle, localPitch, localPanX, localPanZ, setCameraAngle, setCameraPitch, setCameraPan])
+  const handlePointerUp = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDragging.current) return
+    isDragging.current = false
+    e.currentTarget.releasePointerCapture(e.pointerId)
+  }, [])
 
   // Middle mouse = Drehen, rechte Maustaste = Bewegen (Pan) – ueberall im Fenster
   useEffect(() => {
@@ -190,7 +184,9 @@ export function CameraWidget() {
 
       <div
         ref={containerRef}
-        onMouseDown={handleMouseDown}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
         className="w-20 h-20 rounded-full cursor-grab active:cursor-grabbing flex items-center justify-center select-none"
         style={{
           background: 'rgba(0,0,0,0.45)',
