@@ -40,36 +40,33 @@ export function CameraWidget() {
     e.preventDefault()
   }, [])
 
-  const handleMouseMove = useCallback(
-    (e: React.MouseEvent) => {
-      if (!isDragging.current) return
-      const dx = e.clientX - lastPos.current.x
-      const dy = e.clientY - lastPos.current.y
-      lastPos.current = { x: e.clientX, y: e.clientY }
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging.current) return
+    const dx = e.clientX - lastPos.current.x
+    const dy = e.clientY - lastPos.current.y
+    lastPos.current = { x: e.clientX, y: e.clientY }
 
-      if (mode === 'rotate') {
-        const newAngle = localAngle + dx * 0.8
-        const newPitch = localPitch + dy * 0.5
-        setLocalAngle(newAngle)
-        setLocalPitch(newPitch)
-        setCameraAngle(newAngle)
-        setCameraPitch(newPitch)
-      } else {
-        const angleRad = (localAngle * Math.PI) / 180
-        const speed = 0.05
-        const moveX = localPanX + (-dx * Math.cos(angleRad) - dy * Math.sin(angleRad)) * speed
-        const moveZ = localPanZ + (dx * Math.sin(angleRad) - dy * Math.cos(angleRad)) * speed
-        setLocalPanX(moveX)
-        setLocalPanZ(moveZ)
-        setCameraPan(moveX, moveZ)
-      }
-    },
-    [mode, localAngle, localPitch, localPanX, localPanZ, setCameraAngle, setCameraPitch, setCameraPan]
-  )
+    if (mode === 'rotate') {
+      const newAngle = localAngle + dx * 0.8
+      const newPitch = localPitch + dy * 0.5
+      setLocalAngle(newAngle)
+      setLocalPitch(newPitch)
+      setCameraAngle(newAngle)
+      setCameraPitch(newPitch)
+    } else {
+      const angleRad = (localAngle * Math.PI) / 180
+      const speed = 0.05
+      const moveX = localPanX + (-dx * Math.cos(angleRad) - dy * Math.sin(angleRad)) * speed
+      const moveZ = localPanZ + (dx * Math.sin(angleRad) - dy * Math.cos(angleRad)) * speed
+      setLocalPanX(moveX)
+      setLocalPanZ(moveZ)
+      setCameraPan(moveX, moveZ)
+    }
+  }
 
-  const handleMouseUp = useCallback(() => {
+  const handleMouseUp = () => {
     isDragging.current = false
-  }, [])
+  }
 
   // Middle mouse = Drehen, rechte Maustaste = Bewegen (Pan) – ueberall im Fenster
   useEffect(() => {
@@ -177,6 +174,8 @@ export function CameraWidget() {
       <div
         ref={containerRef}
         onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
         className="w-20 h-20 rounded-full bg-white/10 backdrop-blur-md border border-white/20
                    cursor-grab active:cursor-grabbing flex items-center justify-center
                    hover:bg-white/15 transition-colors select-none"
