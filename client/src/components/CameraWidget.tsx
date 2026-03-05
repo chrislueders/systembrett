@@ -40,8 +40,8 @@ export function CameraWidget() {
     e.preventDefault()
   }, [])
 
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
+  const handleMouseMove = useCallback(
+    (e: React.MouseEvent) => {
       if (!isDragging.current) return
       const dx = e.clientX - lastPos.current.x
       const dy = e.clientY - lastPos.current.y
@@ -63,21 +63,13 @@ export function CameraWidget() {
         setLocalPanZ(moveZ)
         setCameraPan(moveX, moveZ)
       }
-    }
+    },
+    [mode, localAngle, localPitch, localPanX, localPanZ, setCameraAngle, setCameraPitch, setCameraPan]
+  )
 
-    const handleMouseUp = () => {
-      isDragging.current = false
-      isMiddleDragging.current = false
-      isRightDragging.current = false
-    }
-
-    window.addEventListener('mousemove', handleMouseMove)
-    window.addEventListener('mouseup', handleMouseUp)
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove)
-      window.removeEventListener('mouseup', handleMouseUp)
-    }
-  }, [localAngle, localPitch, localPanX, localPanZ, mode, setCameraAngle, setCameraPitch, setCameraPan])
+  const handleMouseUp = useCallback(() => {
+    isDragging.current = false
+  }, [])
 
   // Middle mouse = Drehen, rechte Maustaste = Bewegen (Pan) – ueberall im Fenster
   useEffect(() => {
