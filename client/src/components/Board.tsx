@@ -75,21 +75,23 @@ function InsetBorder({ side }: { side: 'left' | 'right' }) {
   if (side === 'left') {
     const leftX = -h + m
     const innerW = h - m
+    const verticalLen = (h - m) * 2 - STRIP_WIDTH
+    const horizontalLen = innerW - STRIP_WIDTH
     return (
       <group>
         {/* Left vertical edge */}
         <mesh position={[leftX, y, 0]}>
-          <boxGeometry args={[STRIP_WIDTH, STRIP_HEIGHT, (h - m) * 2]} />
+          <boxGeometry args={[STRIP_WIDTH, STRIP_HEIGHT, verticalLen]} />
           {mat}
         </mesh>
         {/* Bottom horizontal edge */}
-        <mesh position={[leftX + innerW / 2, y, -h + m]}>
-          <boxGeometry args={[innerW, STRIP_HEIGHT, STRIP_WIDTH]} />
+        <mesh position={[leftX + horizontalLen / 2, y, -h + m]}>
+          <boxGeometry args={[horizontalLen, STRIP_HEIGHT, STRIP_WIDTH]} />
           {mat}
         </mesh>
         {/* Top horizontal edge */}
-        <mesh position={[leftX + innerW / 2, y, h - m]}>
-          <boxGeometry args={[innerW, STRIP_HEIGHT, STRIP_WIDTH]} />
+        <mesh position={[leftX + horizontalLen / 2, y, h - m]}>
+          <boxGeometry args={[horizontalLen, STRIP_HEIGHT, STRIP_WIDTH]} />
           {mat}
         </mesh>
       </group>
@@ -97,21 +99,23 @@ function InsetBorder({ side }: { side: 'left' | 'right' }) {
   } else {
     const rightX = h - m
     const innerW = h - m
+    const verticalLen = (h - m) * 2 - STRIP_WIDTH
+    const horizontalLen = innerW - STRIP_WIDTH
     return (
       <group>
         {/* Right vertical edge */}
         <mesh position={[rightX, y, 0]}>
-          <boxGeometry args={[STRIP_WIDTH, STRIP_HEIGHT, (h - m) * 2]} />
+          <boxGeometry args={[STRIP_WIDTH, STRIP_HEIGHT, verticalLen]} />
           {mat}
         </mesh>
         {/* Bottom horizontal edge */}
-        <mesh position={[rightX - innerW / 2, y, -h + m]}>
-          <boxGeometry args={[innerW, STRIP_HEIGHT, STRIP_WIDTH]} />
+        <mesh position={[rightX - horizontalLen / 2, y, -h + m]}>
+          <boxGeometry args={[horizontalLen, STRIP_HEIGHT, STRIP_WIDTH]} />
           {mat}
         </mesh>
         {/* Top horizontal edge */}
-        <mesh position={[rightX - innerW / 2, y, h - m]}>
-          <boxGeometry args={[innerW, STRIP_HEIGHT, STRIP_WIDTH]} />
+        <mesh position={[rightX - horizontalLen / 2, y, h - m]}>
+          <boxGeometry args={[horizontalLen, STRIP_HEIGHT, STRIP_WIDTH]} />
           {mat}
         </mesh>
       </group>
