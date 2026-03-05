@@ -5,7 +5,7 @@ type Mode = 'rotate' | 'pan'
 
 export function CameraWidget() {
   const containerRef = useRef<HTMLDivElement>(null)
-  const isDragging = useRef(false)
+  const isDragging = useRef(false) // Drag innerhalb des Widgets (linke Maustaste)
   const lastPos = useRef({ x: 0, y: 0 })
 
   const setCameraAngle = useBoardStore((s) => s.setCameraAngle)
@@ -42,37 +42,48 @@ export function CameraWidget() {
     e.preventDefault()
   }, [])
 
-  const handleMouseMove = (e: React.MouseEvent) => {
-    // Sicherheitscheck: nur reagieren, wenn wirklich die linke Taste gehalten wird
-    if (!isDragging.current || (e.buttons & 1) === 0) {
+  // Drag-Logik fuer das Widget selbst – laeuft ueber globale Listener,
+  // damit der Drag weitergeht, auch wenn der Mauszeiger den Kreis verlaesst.
+  useEffect(() => {
+    const handleMove = (e: MouseEvent) => {
+      if (!isDragging.current || (e.buttons & 1) === 0) {
+        isDragging.current = false
+        return
+      }
+
+      const dx = e.clientX - lastPos.current.x
+      const dy = e.clientY - lastPos.current.y
+      lastPos.current = { x: e.clientX, y: e.clientY }
+
+      if (mode === 'rotate') {
+        const newAngle = localAngle + dx * 0.8
+        const newPitch = localPitch + dy * 0.5
+        setLocalAngle(newAngle)
+        setLocalPitch(newPitch)
+        setCameraAngle(newAngle)
+        setCameraPitch(newPitch)
+      } else {
+        const angleRad = (localAngle * Math.PI) / 180
+        const speed = 0.05
+        const moveX = localPanX + (-dx * Math.cos(angleRad) - dy * Math.sin(angleRad)) * speed
+        const moveZ = localPanZ + (dx * Math.sin(angleRad) - dy * Math.cos(angleRad)) * speed
+        setLocalPanX(moveX)
+        setLocalPanZ(moveZ)
+        setCameraPan(moveX, moveZ)
+      }
+    }
+
+    const handleUp = () => {
       isDragging.current = false
-      return
     }
-    const dx = e.clientX - lastPos.current.x
-    const dy = e.clientY - lastPos.current.y
-    lastPos.current = { x: e.clientX, y: e.clientY }
 
-    if (mode === 'rotate') {
-      const newAngle = localAngle + dx * 0.8
-      const newPitch = localPitch + dy * 0.5
-      setLocalAngle(newAngle)
-      setLocalPitch(newPitch)
-      setCameraAngle(newAngle)
-      setCameraPitch(newPitch)
-    } else {
-      const angleRad = (localAngle * Math.PI) / 180
-      const speed = 0.05
-      const moveX = localPanX + (-dx * Math.cos(angleRad) - dy * Math.sin(angleRad)) * speed
-      const moveZ = localPanZ + (dx * Math.sin(angleRad) - dy * Math.cos(angleRad)) * speed
-      setLocalPanX(moveX)
-      setLocalPanZ(moveZ)
-      setCameraPan(moveX, moveZ)
+    window.addEventListener('mousemove', handleMove)
+    window.addEventListener('mouseup', handleUp)
+    return () => {
+      window.removeEventListener('mousemove', handleMove)
+      window.removeEventListener('mouseup', handleUp)
     }
-  }
-
-  const handleMouseUp = () => {
-    isDragging.current = false
-  }
+  }, [mode, localAngle, localPitch, localPanX, localPanZ, setCameraAngle, setCameraPitch, setCameraPan])
 
   // Middle mouse = Drehen, rechte Maustaste = Bewegen (Pan) – ueberall im Fenster
   useEffect(() => {
@@ -180,8 +191,6 @@ export function CameraWidget() {
       <div
         ref={containerRef}
         onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
         className="w-20 h-20 rounded-full cursor-grab active:cursor-grabbing flex items-center justify-center select-none"
         style={{
           background: 'rgba(0,0,0,0.45)',
@@ -218,7 +227,18 @@ export function CameraWidget() {
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: '4px' }}>
+      <div
+        style={{
+          display: 'flex',
+          gap: '4px',
+          background: 'rgba(0,0,0,0.45)',
+          backdropFilter: 'blur(24px)',
+          WebkitBackdropFilter: 'blur(24px)',
+          borderRadius: '999px',
+          padding: '4px 6px',
+          border: '1px solid rgba(255,255,255,0.15)',
+        }}
+      >
         {presets.map((p) => (
           <button
             key={p.label}
