@@ -33,11 +33,13 @@ function PegHead({
   centerY,
   material,
   color,
+  isPreview = false,
 }: {
   headR: number
   centerY: number
   material: THREE.Material
   color: string
+  isPreview?: boolean
 }) {
   const eyeR = headR * 0.13
   const eyeSpread = headR * 0.38
@@ -46,28 +48,28 @@ function PegHead({
 
   return (
     <group position={[0, centerY, 0]}>
-      <mesh castShadow material={material}>
+      <mesh castShadow={!isPreview} material={material}>
         <sphereGeometry args={[headR, 16, 12]} />
       </mesh>
       <mesh position={[-eyeSpread, headR * 0.2, eyeForwardDist]}>
         <sphereGeometry args={[eyeR, 8, 6]} />
-        <meshStandardMaterial color={dotColor} />
+        <meshStandardMaterial color={dotColor} transparent={isPreview} opacity={isPreview ? 0.5 : 1} />
       </mesh>
       <mesh position={[eyeSpread, headR * 0.2, eyeForwardDist]}>
         <sphereGeometry args={[eyeR, 8, 6]} />
-        <meshStandardMaterial color={dotColor} />
+        <meshStandardMaterial color={dotColor} transparent={isPreview} opacity={isPreview ? 0.5 : 1} />
       </mesh>
     </group>
   )
 }
 
-export function Figure({ data }: { data: FigureData }) {
+export function Figure({ data, isPreview = false }: { data: FigureData; isPreview?: boolean }) {
   const groupRef = useRef<THREE.Group>(null)
   const [hovered, setHovered] = useState(false)
   const selectedFigureId = useBoardStore((s) => s.selectedFigureId)
   const draggingFigureId = useBoardStore((s) => s.draggingFigureId)
-  const isSelected = selectedFigureId === data.id
-  const isDragging = draggingFigureId === data.id
+  const isSelected = !isPreview && selectedFigureId === data.id
+  const isDragging = !isPreview && draggingFigureId === data.id
 
   const materialColor = COLOR_MAP[data.color] ?? WOOD_COLOR
   const material = useMemo(
@@ -76,10 +78,12 @@ export function Figure({ data }: { data: FigureData }) {
         color: materialColor,
         roughness: 0.6,
         metalness: 0.05,
+        transparent: isPreview,
+        opacity: isPreview ? 0.5 : 1,
         emissive: isSelected ? '#ffaa00' : isDragging ? '#886600' : hovered ? '#664400' : '#000000',
         emissiveIntensity: isSelected ? 0.4 : isDragging ? 0.3 : hovered ? 0.15 : 0,
       }),
-    [materialColor, isSelected, isDragging, hovered]
+    [materialColor, isPreview, isSelected, isDragging, hovered]
   )
 
   // onClick is the key event -- it fires on pointerUp and we stopPropagation
@@ -105,15 +109,15 @@ export function Figure({ data }: { data: FigureData }) {
       ref={groupRef}
       position={[data.position[0], BOARD_SURFACE_Y, data.position[2]]}
       rotation={[0, data.rotation, 0]}
-      userData={{ isFigure: true, figureId: data.id }}
-      onClick={handleClick}
-      onPointerDown={handlePointerDown}
-      onPointerOver={(e) => {
+      userData={{ isFigure: !isPreview, figureId: data.id }}
+      onClick={isPreview ? undefined : handleClick}
+      onPointerDown={isPreview ? undefined : handlePointerDown}
+      onPointerOver={isPreview ? undefined : (e) => {
         e.stopPropagation()
         setHovered(true)
         document.body.style.cursor = isSelected ? 'grab' : 'pointer'
       }}
-      onPointerOut={() => {
+      onPointerOut={isPreview ? undefined : () => {
         setHovered(false)
         if (!useBoardStore.getState().draggingFigureId) {
           document.body.style.cursor = 'default'
@@ -127,13 +131,13 @@ export function Figure({ data }: { data: FigureData }) {
           const headCenterY = bodyH + headR * 0.7
           return (
             <>
-              <mesh position={[0, bodyH / 2, 0]} castShadow material={material}>
+              <mesh position={[0, bodyH / 2, 0]} castShadow={!isPreview} material={material}>
                 <cylinderGeometry args={[dim.radius * 0.7, dim.radius, bodyH, 16]} />
               </mesh>
               {hasFace ? (
-                <PegHead headR={headR} centerY={headCenterY} material={material} color={data.color} />
+                <PegHead headR={headR} centerY={headCenterY} material={material} color={data.color} isPreview={isPreview} />
               ) : (
-                <mesh position={[0, headCenterY, 0]} castShadow material={material}>
+                <mesh position={[0, headCenterY, 0]} castShadow={!isPreview} material={material}>
                   <sphereGeometry args={[headR, 16, 12]} />
                 </mesh>
               )}
@@ -148,13 +152,13 @@ export function Figure({ data }: { data: FigureData }) {
           const headCenterY = bodyH + headR * 0.5
           return (
             <>
-              <mesh position={[0, bodyH / 2, 0]} castShadow material={material}>
+              <mesh position={[0, bodyH / 2, 0]} castShadow={!isPreview} material={material}>
                 <coneGeometry args={[dim.radius, bodyH, 16]} />
               </mesh>
               {hasFace ? (
-                <PegHead headR={headR} centerY={headCenterY} material={material} color={data.color} />
+                <PegHead headR={headR} centerY={headCenterY} material={material} color={data.color} isPreview={isPreview} />
               ) : (
-                <mesh position={[0, headCenterY, 0]} castShadow material={material}>
+                <mesh position={[0, headCenterY, 0]} castShadow={!isPreview} material={material}>
                   <sphereGeometry args={[headR, 16, 12]} />
                 </mesh>
               )}
@@ -163,13 +167,13 @@ export function Figure({ data }: { data: FigureData }) {
         })()}
 
       {data.type.startsWith('cylinder') && (
-        <mesh position={[0, dim.height / 2, 0]} castShadow material={material}>
+        <mesh position={[0, dim.height / 2, 0]} castShadow={!isPreview} material={material}>
           <cylinderGeometry args={[dim.radius, dim.radius, dim.height, 16]} />
         </mesh>
       )}
 
       {data.type === 'stick' && (
-        <mesh position={[0, 0.4, 0]} castShadow material={material}>
+        <mesh position={[0, 0.4, 0]} castShadow={!isPreview} material={material}>
           <cylinderGeometry args={[0.04, 0.04, 0.8, 8]} />
         </mesh>
       )}

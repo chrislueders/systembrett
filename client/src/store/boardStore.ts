@@ -7,6 +7,8 @@ interface BoardStore {
   selectedFigureId: string | null
   draggingFigureId: string | null
   placingFigure: FigureType | null
+  sidebarDraggingType: FigureType | null
+  sidebarDragPreview: [number, number, number] | null
 
   cameraAngle: number
   cameraPitch: number
@@ -26,6 +28,8 @@ interface BoardStore {
   selectFigure: (id: string | null) => void
   setDraggingFigure: (id: string | null) => void
   setPlacingFigure: (type: FigureType | null) => void
+  setSidebarDraggingType: (type: FigureType | null) => void
+  setSidebarDragPreview: (pos: [number, number, number] | null) => void
   toggleSplit: () => void
   setSplit: (split: boolean) => void
   setCameraAngle: (angle: number) => void
@@ -50,6 +54,8 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
   selectedFigureId: null,
   draggingFigureId: null,
   placingFigure: null,
+  sidebarDraggingType: null,
+  sidebarDragPreview: null,
 
   cameraAngle: 0,
   cameraPitch: 45,
@@ -110,6 +116,10 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
 
   setPlacingFigure: (type) => set({ placingFigure: type, selectedFigureId: null }),
 
+  setSidebarDraggingType: (type) => set({ sidebarDraggingType: type }),
+
+  setSidebarDragPreview: (pos) => set({ sidebarDragPreview: pos }),
+
   toggleSplit: () => {
     const newSplit = !get().isSplit
     set({ isSplit: newSplit })
@@ -137,6 +147,8 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
       selectedFigureId: null,
       draggingFigureId: null,
       placingFigure: null,
+      sidebarDraggingType: null,
+      sidebarDragPreview: null,
     }),
 
   getExportState: () => {
@@ -149,7 +161,7 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
   },
 
   reset: () => {
-    set({ figures: [], isSplit: false, selectedFigureId: null, draggingFigureId: null, placingFigure: null })
+    set({ figures: [], isSplit: false, selectedFigureId: null, draggingFigureId: null, placingFigure: null, sidebarDraggingType: null, sidebarDragPreview: null })
     get().onSync?.('board:reset', {})
   },
 }))

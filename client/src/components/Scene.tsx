@@ -4,6 +4,7 @@ import type { ThreeEvent } from '@react-three/fiber'
 import * as THREE from 'three'
 import { Board } from './Board'
 import { Figures } from './Figures'
+import { Figure } from './Figure'
 import { RotationRing } from './RotationRing'
 import { useBoardStore } from '../store/boardStore'
 import { generateId } from '../store/boardStore'
@@ -282,11 +283,21 @@ function SidebarDropHandler() {
       if (e.dataTransfer?.types.includes('application/x-systembrett-figure-type')) {
         e.preventDefault()
         e.dataTransfer.dropEffect = 'copy'
+        const pos = getWorldPos(e.clientX, e.clientY)
+        if (pos) {
+          useBoardStore.getState().setSidebarDragPreview([pos.x, BOARD_SURFACE_Y, pos.z])
+        }
       }
+    }
+
+    const onDragLeave = () => {
+      useBoardStore.getState().setSidebarDragPreview(null)
     }
 
     const onDrop = (e: DragEvent) => {
       const type = e.dataTransfer?.getData('application/x-systembrett-figure-type') as FigureType | ''
+      useBoardStore.getState().setSidebarDragPreview(null)
+      useBoardStore.getState().setSidebarDraggingType(null)
       if (!type) return
       e.preventDefault()
 
@@ -316,14 +327,28 @@ function SidebarDropHandler() {
     }
 
     el.addEventListener('dragover', onDragOver)
+    el.addEventListener('dragleave', onDragLeave)
     el.addEventListener('drop', onDrop)
     return () => {
       el.removeEventListener('dragover', onDragOver)
+      el.removeEventListener('dragleave', onDragLeave)
       el.removeEventListener('drop', onDrop)
     }
   }, [gl, getWorldPos])
 
   return null
+}
+
+function SidebarDragPreview() {
+  const type = useBoardStore((s) => s.sidebarDraggingType)
+  const pos = useBoardStore((s) => s.sidebarDragPreview)
+  if (!type || !pos) return null
+  return (
+    <Figure
+      data={{ id: '__preview__', type, color: 'wood', position: pos, rotation: 0, boardHalf: 'left' }}
+      isPreview
+    />
+  )
 }
 
 export function Scene() {
@@ -340,6 +365,7 @@ export function Scene() {
       <Ground />
       <Board />
       <Figures />
+      <SidebarDragPreview />
       <RotationRing />
       <BoardClickHandler />
       <SidebarDropHandler />
