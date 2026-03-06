@@ -32,6 +32,17 @@ function FigureButton({ type, label }: { type: FigureType; label: string }) {
   const handleDragStart = (e: React.DragEvent<HTMLButtonElement>) => {
     e.dataTransfer.effectAllowed = 'copy'
     e.dataTransfer.setData('application/x-systembrett-figure-type', type)
+    useBoardStore.getState().setSidebarDraggingType(type)
+    const ghost = document.createElement('div')
+    ghost.style.cssText = 'position:fixed;top:-9999px;width:1px;height:1px;'
+    document.body.appendChild(ghost)
+    e.dataTransfer.setDragImage(ghost, 0, 0)
+    requestAnimationFrame(() => document.body.removeChild(ghost))
+  }
+
+  const handleDragEnd = () => {
+    useBoardStore.getState().setSidebarDraggingType(null)
+    useBoardStore.getState().setSidebarDragPreview(null)
   }
 
   return (
@@ -39,6 +50,7 @@ function FigureButton({ type, label }: { type: FigureType; label: string }) {
       onClick={handleClick}
       draggable
       onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
       style={{
         display: 'flex',
         alignItems: 'center',
