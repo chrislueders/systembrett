@@ -106,13 +106,13 @@ export function Toolbar() {
             transition: 'background 150ms',
           }}
         >
-          {isSplit ? 'Zusammenfuegen' : 'Brett trennen'}
+          {isSplit ? 'Zusammenfügen' : 'Brett trennen'}
         </button>
 
         {/* Menu toggle */}
         <button
           onClick={() => setMenuOpen(!menuOpen)}
-          title={menuOpen ? 'Menue schliessen' : 'Menue oeffnen'}
+          title={menuOpen ? 'Menü schließen' : 'Menü öffnen'}
           style={{
             width: '40px',
             height: '40px',
@@ -164,7 +164,7 @@ export function Toolbar() {
             maxWidth: '280px',
           }}
         >
-          Figur markiert. Ziehe = verschieben. Ring = Blickrichtung. Klick daneben = abwaehlen.
+          Figur markiert. Ziehe = verschieben. Ring = Blickrichtung. Klick daneben = abwählen.
         </div>
       )}
 
@@ -181,7 +181,7 @@ export function Toolbar() {
         >
           <ToolbarButton onClick={handleExport}>Exportieren</ToolbarButton>
           <ToolbarButton onClick={handleImport}>Importieren</ToolbarButton>
-          <ToolbarButton onClick={reset} danger>Zuruecksetzen</ToolbarButton>
+          <ToolbarButton onClick={reset} danger>Zurücksetzen</ToolbarButton>
         </div>
       )}
     </div>
