@@ -2,11 +2,11 @@ import { useRef, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { useBoardStore } from '../store/boardStore'
-import { BOARD_SIZE, BOARD_HEIGHT, BOARD_SURFACE_Y, SPLIT_OFFSET, GAP_CLOSED, INSET_MARGIN } from '../types'
+import { BOARD_SIZE, BOARD_HEIGHT, SPLIT_OFFSET, GAP_CLOSED, INSET_MARGIN } from '../types'
 
 const INSET_COLOR = '#96731e'
-const STRIP_HEIGHT = 0.015
 const STRIP_WIDTH = 0.04
+const GROOVE_DEPTH = 0.02 // sichtbare Vertiefung (echte Kerbe, ~2 cm)
 
 function getCurvePoints(): THREE.Vector2[] {
   const h = BOARD_SIZE / 2
@@ -62,13 +62,75 @@ function createHalfShape(side: 'left' | 'right'): THREE.Shape {
   return s
 }
 
-function InsetBorder({ side }: { side: 'left' | 'right' }) {
+/** Geschlossene Pfade für die Nut-Löcher (je Brett-Hälfte 3 Streifen). Loch-Windung gegenüber dem Außen-Shape. */
+function createGrooveHoles(side: 'left' | 'right'): THREE.Path[] {
   const h = BOARD_SIZE / 2
   const m = INSET_MARGIN
-  // leicht in die Brettoberflaeche eingeschnitten (Kerbe)
-  const y = BOARD_SURFACE_Y - STRIP_HEIGHT / 2 - 0.002
-  const cornerAdjust = 0.04
+  const w = STRIP_WIDTH / 2
+  const holes: THREE.Path[] = []
 
+  // Holes müssen entgegengesetzte Windung zur Außenkontur haben (für ExtrudeGeometry).
+  if (side === 'left') {
+    const leftX = -h + m
+    const innerW = h - m
+    const leftHole = new THREE.Path()
+    leftHole.moveTo(leftX - w, -h + m)
+    leftHole.lineTo(leftX + w, -h + m)
+    leftHole.lineTo(leftX + w, h - m)
+    leftHole.lineTo(leftX - w, h - m)
+    leftHole.closePath()
+    holes.push(leftHole)
+    const topHole = new THREE.Path()
+    topHole.moveTo(leftX, h - m - w)
+    topHole.lineTo(leftX + innerW, h - m - w)
+    topHole.lineTo(leftX + innerW, h - m + w)
+    topHole.lineTo(leftX, h - m + w)
+    topHole.closePath()
+    holes.push(topHole)
+    const botHole = new THREE.Path()
+    botHole.moveTo(leftX, -h + m - w)
+    botHole.lineTo(leftX, -h + m + w)
+    botHole.lineTo(leftX + innerW, -h + m + w)
+    botHole.lineTo(leftX + innerW, -h + m - w)
+    botHole.closePath()
+    holes.push(botHole)
+  } else {
+    const rightX = h - m
+    const innerW = h - m
+    const rightHole = new THREE.Path()
+    rightHole.moveTo(rightX - w, -h + m)
+    rightHole.lineTo(rightX - w, h - m)
+    rightHole.lineTo(rightX + w, h - m)
+    rightHole.lineTo(rightX + w, -h + m)
+    rightHole.closePath()
+    holes.push(rightHole)
+    const topHole = new THREE.Path()
+    topHole.moveTo(rightX - innerW, h - m - w)
+    topHole.lineTo(rightX, h - m - w)
+    topHole.lineTo(rightX, h - m + w)
+    topHole.lineTo(rightX - innerW, h - m + w)
+    topHole.closePath()
+    holes.push(topHole)
+    const botHole = new THREE.Path()
+    botHole.moveTo(rightX - innerW, -h + m - w)
+    botHole.lineTo(rightX - innerW, -h + m + w)
+    botHole.lineTo(rightX, -h + m + w)
+    botHole.lineTo(rightX, -h + m - w)
+    botHole.closePath()
+    holes.push(botHole)
+  }
+  return holes
+}
+
+/** Boden der Nut (Kerbe) – dunkle Fläche auf Höhe der Kerbensohle. */
+const GROOVE_FLOOR_Y = BOARD_HEIGHT - GROOVE_DEPTH
+const FLOOR_THICKNESS = 0.001
+
+function GrooveBottoms({ side }: { side: 'left' | 'right' }) {
+  const h = BOARD_SIZE / 2
+  const m = INSET_MARGIN
+  const innerW = h - m
+  const verticalLen = (h - m) * 2
   const mat = useMemo(
     () => <meshStandardMaterial color={INSET_COLOR} roughness={0.75} />,
     []
@@ -76,70 +138,72 @@ function InsetBorder({ side }: { side: 'left' | 'right' }) {
 
   if (side === 'left') {
     const leftX = -h + m
-    const innerW = h - m
-    const verticalLen = (h - m) * 2 - cornerAdjust * 2
-    const horizontalLen = innerW + cornerAdjust * 2
     return (
       <group>
-        {/* Left vertical edge */}
-        <mesh position={[leftX, y, 0]}>
-          <boxGeometry args={[STRIP_WIDTH, STRIP_HEIGHT, verticalLen]} />
+        <mesh position={[leftX, GROOVE_FLOOR_Y, 0]}>
+          <boxGeometry args={[STRIP_WIDTH, FLOOR_THICKNESS, verticalLen]} />
           {mat}
         </mesh>
-        {/* Bottom horizontal edge */}
-        <mesh position={[leftX + horizontalLen / 2, y, -h + m]}>
-          <boxGeometry args={[horizontalLen, STRIP_HEIGHT, STRIP_WIDTH]} />
+        <mesh position={[leftX + innerW / 2, GROOVE_FLOOR_Y, -h + m]}>
+          <boxGeometry args={[innerW, FLOOR_THICKNESS, STRIP_WIDTH]} />
           {mat}
         </mesh>
-        {/* Top horizontal edge */}
-        <mesh position={[leftX + horizontalLen / 2, y, h - m]}>
-          <boxGeometry args={[horizontalLen, STRIP_HEIGHT, STRIP_WIDTH]} />
-          {mat}
-        </mesh>
-      </group>
-    )
-  } else {
-    const rightX = h - m
-    const innerW = h - m
-    const verticalLen = (h - m) * 2 - cornerAdjust * 2
-    const horizontalLen = innerW + cornerAdjust * 2
-    return (
-      <group>
-        {/* Right vertical edge */}
-        <mesh position={[rightX, y, 0]}>
-          <boxGeometry args={[STRIP_WIDTH, STRIP_HEIGHT, verticalLen]} />
-          {mat}
-        </mesh>
-        {/* Bottom horizontal edge */}
-        <mesh position={[rightX - horizontalLen / 2, y, -h + m]}>
-          <boxGeometry args={[horizontalLen, STRIP_HEIGHT, STRIP_WIDTH]} />
-          {mat}
-        </mesh>
-        {/* Top horizontal edge */}
-        <mesh position={[rightX - horizontalLen / 2, y, h - m]}>
-          <boxGeometry args={[horizontalLen, STRIP_HEIGHT, STRIP_WIDTH]} />
+        <mesh position={[leftX + innerW / 2, GROOVE_FLOOR_Y, h - m]}>
+          <boxGeometry args={[innerW, FLOOR_THICKNESS, STRIP_WIDTH]} />
           {mat}
         </mesh>
       </group>
     )
   }
+  const rightX = h - m
+  return (
+    <group>
+      <mesh position={[rightX, GROOVE_FLOOR_Y, 0]}>
+        <boxGeometry args={[STRIP_WIDTH, FLOOR_THICKNESS, verticalLen]} />
+        {mat}
+      </mesh>
+      <mesh position={[rightX - innerW / 2, GROOVE_FLOOR_Y, -h + m]}>
+        <boxGeometry args={[innerW, FLOOR_THICKNESS, STRIP_WIDTH]} />
+        {mat}
+      </mesh>
+      <mesh position={[rightX - innerW / 2, GROOVE_FLOOR_Y, h - m]}>
+        <boxGeometry args={[innerW, FLOOR_THICKNESS, STRIP_WIDTH]} />
+        {mat}
+      </mesh>
+    </group>
+  )
+}
+
+const extrudeSettings: THREE.ExtrudeGeometryOptions = {
+  bevelEnabled: true,
+  bevelThickness: 0.04,
+  bevelSize: 0.04,
+  bevelSegments: 3,
 }
 
 function BoardHalf({ side }: { side: 'left' | 'right' }) {
   const groupRef = useRef<THREE.Group>(null)
   const isSplit = useBoardStore((s) => s.isSplit)
 
-  const geometry = useMemo(() => {
-    const shape = createHalfShape(side)
-    const geo = new THREE.ExtrudeGeometry(shape, {
-      depth: BOARD_HEIGHT,
-      bevelEnabled: true,
-      bevelThickness: 0.04,
-      bevelSize: 0.04,
-      bevelSegments: 3,
+  const { baseGeo, topGeo } = useMemo(() => {
+    const baseShape = createHalfShape(side)
+    const baseGeo = new THREE.ExtrudeGeometry(baseShape, {
+      ...extrudeSettings,
+      depth: BOARD_HEIGHT - GROOVE_DEPTH,
     })
-    geo.rotateX(-Math.PI / 2)
-    return geo
+    baseGeo.rotateX(-Math.PI / 2)
+
+    const topShape = createHalfShape(side)
+    for (const hole of createGrooveHoles(side)) topShape.holes.push(hole)
+    const topGeo = new THREE.ExtrudeGeometry(topShape, {
+      ...extrudeSettings,
+      depth: GROOVE_DEPTH,
+      bevelEnabled: false, // Bevel kann Löcher stören; Nutkanten bleiben scharf
+    })
+    topGeo.rotateX(-Math.PI / 2)
+    topGeo.translate(0, BOARD_HEIGHT - GROOVE_DEPTH, 0)
+
+    return { baseGeo, topGeo }
   }, [side])
 
   useFrame(() => {
@@ -154,12 +218,18 @@ function BoardHalf({ side }: { side: 'left' | 'right' }) {
     )
   })
 
+  const boardMat = (
+    <meshStandardMaterial color="#d4a456" roughness={0.65} metalness={0.0} />
+  )
   return (
     <group ref={groupRef}>
-      <mesh geometry={geometry} receiveShadow castShadow>
-        <meshStandardMaterial color="#d4a456" roughness={0.65} metalness={0.0} />
+      <mesh geometry={baseGeo} receiveShadow castShadow>
+        {boardMat}
       </mesh>
-      <InsetBorder side={side} />
+      <mesh geometry={topGeo} receiveShadow castShadow>
+        {boardMat}
+      </mesh>
+      <GrooveBottoms side={side} />
     </group>
   )
 }
