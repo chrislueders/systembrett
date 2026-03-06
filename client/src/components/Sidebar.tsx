@@ -163,7 +163,7 @@ export function Sidebar() {
         <button
           onClick={() => setCollapsed(false)}
           style={toggleBtnStyle}
-          title="Figurenauswahl oeffnen"
+          title="Figurenauswahl öffnen"
         >
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
             <rect x="3" y="4" width="14" height="2" rx="1" fill="currentColor" />

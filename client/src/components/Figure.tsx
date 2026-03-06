@@ -42,7 +42,7 @@ function PegHead({
   const eyeR = headR * 0.13
   const eyeSpread = headR * 0.38
   const eyeForwardDist = headR * 0.96
-  const dotColor = color === 'black' ? '#555' : '#222'
+  const dotColor = (color === 'black' || color === 'blue' || color === 'green') ? '#eee' : '#222'
 
   return (
     <group position={[0, centerY, 0]}>

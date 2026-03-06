@@ -143,7 +143,7 @@ export function CameraWidget() {
 
   const presets = [
     { label: 'Oben', angle: 0, pitch: 88, panX: 0, panZ: 0 },
-    { label: 'Schraeg', angle: 25, pitch: 45, panX: 0, panZ: 0 },
+    { label: 'Schräg', angle: 25, pitch: 45, panX: 0, panZ: 0 },
     { label: 'Seite', angle: 90, pitch: 20, panX: 0, panZ: 0 },
   ]
 
